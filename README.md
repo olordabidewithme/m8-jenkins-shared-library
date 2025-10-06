@@ -1,3 +1,15 @@
+Demo Project
+	- Create a Jenkins Shared Library
+
+Technologies Used
+	- Jenkins, Groovy, Docker, Git, Java, Maven
+
+Project Description
+	- Create a Jenkins Shared Library to extract common build logic:
+	- Create separate Git repository for Jenkins Shared Library project
+	- Create functions in the JSL to use in the Jenkins pipeline
+	- Integrate and use the JSL in Jenkins Pipeline (globally and for a specific project in Jenkinsfile)
+
 1. Create the shared library
 	- create groovy project
 		- Name : jenkins-shared-library
@@ -85,7 +97,7 @@ def call(String imageName) {
 
 
 4. create and push repository to GitHub
-	- create a new repository in github : jenkins-shared-library
+	- create a new repository in github : m8-jenkins-shared-library
 	- go to local project folder
 		- git init
 		- git remote add origin https://github.com/olordabidewithme/m8-jenkins-shared-library.git
@@ -95,7 +107,7 @@ def call(String imageName) {
 
 
 
-5. Make shared library in jenkins (Make shared library available globally)
+5. Integrate and use the JSL in Jenkins Pipeline Globally
 	- Manage Jenkins > System > Global Pipeline Libraries > Add
 		- Name : jenkins-shared-library
 		- Default version : main
@@ -103,32 +115,52 @@ def call(String imageName) {
 		- Project Repository : https://github.com/olordabidewithme/m8-jenkins-shared-library.git
 		- Credentials : git-credentials
 
-6. Reference the shared library in jenkinsfile
-	- create new branch "jenkins-shared-lib" and switch to it
-	- go to jenkinsfil
+	- Reference the shared library in jenkinsfile (Globally)
+		- switch to project "m8-create-jenkins-sharedlib-pipeline"
+		- go to jenkinsfile
 
-#!/user/bin/env groovy
-import library : @Library('jenkins-shared-library')	
-stage("build jar") {
-	steps {
-		script{
-			buildJar()
-		}
-	}
-}
-stage("build and push image") {
-	steps {
-		script{
-			buildJar 'olordabidewithme/demo-app-3.0'
-			dockerLogin()
-			dockerPush 'olordabidewithme/demo-app-3.0'
-		}
-	}
-}
-
-Project scope shared library instead public
 ```bash
-	Library identifier : "jenkins-shared-library@main", retriever: modernSCM(
+#!/user/bin/env groovy
+import library : @Library('jenkins-shared-library')
+
+pipeline {
+
+	agent any
+
+    	tools {
+        	maven 'maven-3.9.2'
+    	}	
+	
+	stage("build jar") {
+		steps {
+			script{
+				buildJar()
+			}
+		}
+	}
+	stage("build and push image") {
+		steps {
+			script{
+				buildImage 'olordabidewithme/demo-app-3.0'
+				dockerLogin()
+				dockerPush 'olordabidewithme/demo-app-3.0'
+			}
+		}
+	}
+        stage("deploy") {
+            steps {
+                script {
+                    gv.deployApp()
+                }
+            }
+        }  
+}
+```
+7. Integrate and use the JSL in Jenkins Pipeline for a specific project in Jenkinsfile
+```bash
+#!/user/bin/env groovy
+
+Library identifier : "jenkins-shared-library@main", retriever: modernSCM(
 		[$class: 'GitSCMSource',
 		remote: 'https://github.com/olordabidewithme/m8-jenkins-shared-library.git',
 		credentials: 'git-credentials']) 
