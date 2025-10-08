@@ -120,8 +120,11 @@ def call(String imageName) {
 		- go to jenkinsfile
 
 ```bash
-#!/user/bin/env groovy
-import library : @Library('jenkins-shared-library')
+#!/usr/bin/env groovy
+
+@Library('jenkins-shared-library') _
+
+def gv
 
 pipeline {
 
